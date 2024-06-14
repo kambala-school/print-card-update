@@ -1,0 +1,15 @@
+services:
+  print-card-update:
+    build: .
+    container_name: print-card-update
+    ports:
+      - 5000:5000
+    env_file: .env
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.print-card-update.entrypoints=websecure
+      - traefik.http.routers.print-card-update.middlewares=my-ldapAuth@file
+      - traefik.http.routers.print-card-update.rule=Host(`print-card-update.kambala.nsw.edu.au`)
+      - traefik.http.routers.print-card-update.tls=true
+      - traefik.http.services.print-card-update.loadbalancer.server.port=5000
