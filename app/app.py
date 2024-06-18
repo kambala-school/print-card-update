@@ -9,6 +9,7 @@ app = Flask(__name__)
 
 # Load environment variables
 load_dotenv()
+FLASK_PORT = os.getenv("FLASK_PORT")
 LDAP_SERVER = os.getenv("LDAP_SERVER")
 LDAP_USER = os.getenv("LDAP_USER")
 LDAP_PASSWORD = os.getenv("LDAP_PASSWORD")
@@ -97,4 +98,4 @@ def failure():
     return "Failed to update the Card ID number. Please check the values and try again."
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5050)
+    app.run(debug=True, host='0.0.0.0', port=FLASK_PORT)
