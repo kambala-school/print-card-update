@@ -25,10 +25,11 @@ def index():
     if request.method == 'POST':
         username = request.form['username']
         id_number = request.form['id_number']
-        if set_pager_attribute(username, id_number):
+        success, error_message = set_pager_attribute(username, id_number)
+        if success:
             return redirect(url_for('success'))
         else:
-            return redirect(url_for('failure'))
+            return redirect(url_for('failure', error_message=error_message))
     return render_template('index.html')
 
 def hex_to_decimal(hex_num):
@@ -67,7 +68,7 @@ def set_pager_attribute(username, id_number):
     id_number = hex_to_decimal(id_number)
     if isinstance(id_number, str):
         print(id_number)
-        return False
+        return False, 'Card number could not be converted to decimal'
     print(f'Updating {username} with {id_number}')
     
     try:
@@ -78,24 +79,30 @@ def set_pager_attribute(username, id_number):
             # Modify the pager attribute
             conn.modify(user_dn, {'pager': [(MODIFY_REPLACE, [id_number])]})
             if conn.result['description'] == 'success':
-                return set_papercut_primary_card(username, id_number)
+                return set_papercut_primary_card(username, id_number), ''
             else:
-                return False
+                print(f'LDAP Error: {conn.result['description']}')
+                return False, conn.result['description']
         else:
             print('User not found')
-            return False
+            return False, 'User not found'
     except Exception as e:
         print(f'Error: {e}')
-        return False
-
+        return False, e
 
 @app.route('/success')
 def success():
-    return "Card ID number successfully updated."
+    return render_template('success.html')
+# return "Card ID number successfully updated."
 
 @app.route('/failure')
 def failure():
-    return "Failed to update the Card ID number. Please check the values and try again."
+    error_message = request.args.get('error_message', 'An unknown error occurred.')
+    print(error_message)
+    #return True
+    return render_template('failure.html', error_message=error_message)
+# return "Failed to update the Card ID number. Please check the values and try again."
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=FLASK_PORT)
