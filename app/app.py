@@ -81,7 +81,7 @@ def set_pager_attribute(username, id_number):
             if conn.result['description'] == 'success':
                 return set_papercut_primary_card(username, id_number), ''
             else:
-                print(f'LDAP Error: {conn.result['description']}')
+                print(f"LDAP Error: {conn.result['description']}")
                 return False, conn.result['description']
         else:
             print('User not found')

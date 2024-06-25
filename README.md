@@ -2,6 +2,11 @@
 Simple web app for ICT staff to update the ID card for a user in PaperCut and Active Directory
 
 ## Environment Variables
+Container variables
+```
+TZ = 'Australia/Sydney'
+FLASK_PORT = '5000'
+```
 Active Directory connection details
 ```
 LDAP_SERVER = 'ldap://host.domain.com'
