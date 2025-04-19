@@ -2,22 +2,49 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Update Print Card ID Number</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
   </head>
   <body>
-    <div class="container mt-5">
-        <h1>Update Print Card ID Number 🤑🖨️</h1>
-        <p>Enter the username and scan the card into the ID Number field. This will update AD and PaperCut.</p>
-        <form method="post">
-        <label for="username">Username:</label><br>
-        <input type="text" id="username" name="username" required><br><br>
-        <label for="id_number">ID Number (Hex):</label><br>
-        <input type="text" id="id_number" name="id_number" required><br><br>
-        <button type="submit" class="btn btn-primary">Update</button>
-        </form>
+    <div class="container py-5">
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+          <div class="card">
+            <div class="card-body p-4 p-md-5">
+              <h1 class="page-title text-center mb-4">
+                Update Print Card ID Number
+                <span role="img" aria-label="money and printer">🤑🖨️</span>
+              </h1>
+              <p class="description text-center">
+                This app will update Active Directory and PaperCut with the new card ID number.
+              </p>
+              <form method="post" class="needs-validation" novalidate>
+                <div class="mb-4">
+                  <label for="username" class="form-label">Username</label>
+                  <input type="text" class="form-control form-control-lg" 
+                         id="username" name="username" required
+                         placeholder="Enter username">
+                </div>
+                <div class="mb-4">
+                  <label for="id_number" class="form-label">ID Number (Hex)</label>
+                  <input type="text" class="form-control form-control-lg" 
+                         id="id_number" name="id_number" required
+                         placeholder="Scan card or enter hex">
+                </div>
+                <div class="d-grid gap-2">
+                  <button type="submit" class="btn btn-primary btn-lg">
+                    Update
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="{{ url_for('static', filename='js/form-validation.js') }}"></script>
   </body>
 </html>

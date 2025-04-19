@@ -1,7 +1,8 @@
 from flask import Flask, request, render_template, redirect, url_for
 from ldap3 import Server, Connection, ALL, MODIFY_REPLACE
 import xmlrpc.client
-from ssl import create_default_context, Purpose
+#from ssl import create_default_context, Purpose
+import ssl
 import os
 from dotenv import load_dotenv
 
@@ -18,7 +19,8 @@ PAPERCUT_HOST = os.getenv("PAPERCUT_HOST") # Client address will need to be whit
 PAPERCUT_AUTH = os.getenv("PAPERCUT_AUTH") # Value defined in advanced config property "auth.webservices.auth-token".
 
 # PaperCut XML API https://www.papercut.com/help/manuals/ng-mf/common/tools-web-services/
-proxy = xmlrpc.client.ServerProxy(PAPERCUT_HOST)
+context = ssl._create_unverified_context()
+proxy = xmlrpc.client.ServerProxy(PAPERCUT_HOST, context=context)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
