@@ -1,6 +1,7 @@
 services:
   print-card-update:
-    build: .
+    # build: .
+    image: ghcr.io/kambala-school/print-card-update:latest
     container_name: print-card-update
     ports:
       - 5000:5000
