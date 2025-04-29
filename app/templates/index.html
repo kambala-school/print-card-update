@@ -4,47 +4,49 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Update Print Card ID Number</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <div class="container py-5">
-      <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-6">
-          <div class="card">
-            <div class="card-body p-4 p-md-5">
-              <h1 class="page-title text-center mb-4">
-                Print Card Updater<br />
-                <span role="img" aria-label="money and printer">🤑🖨️</span>
-              </h1>
-              <p class="description text-center">
-                This app will update Active Directory and PaperCut with the new card ID number.
-              </p>
-              <form method="post" class="needs-validation" novalidate>
-                <div class="mb-4">
-                  <label for="username" class="form-label">Username</label>
-                  <input type="text" class="form-control form-control-lg" 
-                         id="username" name="username" required
-                         placeholder="Enter username">
-                </div>
-                <div class="mb-4">
-                  <label for="id_number" class="form-label">ID Number (Hex)</label>
-                  <input type="text" class="form-control form-control-lg" 
-                         id="id_number" name="id_number" required
-                         placeholder="Scan card or enter hex">
-                </div>
-                <div class="d-grid gap-2">
-                  <button type="submit" class="btn btn-primary btn-lg">
-                    Update
-                  </button>
-                </div>
-              </form>
-            </div>
+  <body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="container mx-auto px-4 py-8">
+      <div class="max-w-md mx-auto">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div class="p-8">
+            <h1 class="text-3xl font-bold text-center text-gray-800 mb-4">
+              Print Card Updater<br />
+              <span role="img" aria-label="money and printer" class="text-4xl">🤑🖨️</span>
+            </h1>
+            <p class="text-lg text-gray-600 text-center mb-8">
+              This app will update Active Directory and PaperCut with the new card ID number.
+            </p>
+            <form method="post" class="space-y-6">
+              <div>
+                <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                <input type="text" 
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       id="username" 
+                       name="username" 
+                       required
+                       placeholder="Enter username">
+              </div>
+              <div>
+                <label for="id_number" class="block text-sm font-medium text-gray-700 mb-2">ID Number (Hex)</label>
+                <input type="text" 
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       id="id_number" 
+                       name="id_number" 
+                       required
+                       placeholder="Scan card or enter hex">
+              </div>
+              <button type="submit" 
+                      class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-300">
+                Update
+              </button>
+            </form>
           </div>
         </div>
       </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/form-validation.js') }}"></script>
   </body>
 </html>
