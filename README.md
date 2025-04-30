@@ -22,3 +22,10 @@ The password is defined in advanced config property "auth.webservices.auth-token
 PAPERCUT_HOST = 'https://papercut.domain.com:9192/rpc/api/xmlrpc'
 PAPERCUT_AUTH = 'passwordString'
 ```
+OpenID IdP details
+```
+OAUTH_CLIENT_ID=your_client_id_here
+OAUTH_CLIENT_SECRET=your_client_secret_here
+OAUTH_ISSUER=https://issuer/
+OAUTH_METADATA_URL=https://metadata/
+```
