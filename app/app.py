@@ -117,9 +117,17 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
+    if request.method == 'POST':
+        username = request.form['username']
+        id_number = request.form['id_number']
+        success, error_message = set_pager_attribute(username, id_number)
+        if success:
+            return redirect(url_for('success'))
+        else:
+            return redirect(url_for('failure', error_message=error_message))
     return render_template('index.html')
 
 @app.route('/success')
