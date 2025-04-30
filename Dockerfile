@@ -7,7 +7,7 @@ RUN useradd -m -u 1000 appuser
 # Install system dependencies including OpenSSL
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    libssl-dev \
+    libssl-dev build-essential libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
