@@ -16,9 +16,6 @@ WORKDIR /app
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
 # Copy application code
 COPY app .
 
@@ -27,6 +24,9 @@ RUN chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Run the application
 CMD ["python", "-u", "app.py"]
