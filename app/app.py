@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 import base64
 from functools import wraps
 
-
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
