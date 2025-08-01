@@ -9,6 +9,8 @@ import logging
 from dotenv import load_dotenv
 import base64
 from functools import wraps
+import requests
+import xml.etree.ElementTree as ET
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -28,12 +30,17 @@ LDAP_SERVER = os.getenv("LDAP_SERVER")
 LDAP_USER = os.getenv("LDAP_USER")
 LDAP_PASSWORD = os.getenv("LDAP_PASSWORD")
 LDAP_SEARCH_BASE = os.getenv("LDAP_SEARCH_BASE")
+LDAP_STUDENT_GROUP = os.getenv("LDAP_STUDENT_GROUP")
 PAPERCUT_HOST = os.getenv("PAPERCUT_HOST") # Client address will need to be whitelisted with advanced config property "auth.webservices.allowed-addresses"
 PAPERCUT_AUTH = os.getenv("PAPERCUT_AUTH") # Value defined in advanced config property "auth.webservices.auth-token".
 OAUTH_CLIENT_ID = os.getenv("OAUTH_CLIENT_ID")
 OAUTH_CLIENT_SECRET = os.getenv("OAUTH_CLIENT_SECRET")
 OAUTH_ISSUER = os.getenv("OAUTH_ISSUER")
 OAUTH_METADATA_URL = os.getenv("OAUTH_METADATA_URL")
+
+# RollCall configuration
+ROLLCALL_API_URL = os.getenv("ROLLCALL_API_URL")
+ROLLCALL_TOKEN = os.getenv("ROLLCALL_TOKEN")
 
 # PaperCut XML API https://www.papercut.com/help/manuals/ng-mf/common/tools-web-services/
 context = ssl._create_unverified_context()
@@ -165,6 +172,78 @@ def set_papercut_primary_card(username, id_number):
         print(f'Error: {error}')
         return False
 
+def get_student_number(username):
+    """Get student number from Active Directory for the given username."""
+    server = Server(LDAP_SERVER, get_info=ALL)
+    conn = Connection(server, LDAP_USER, LDAP_PASSWORD, auto_bind=True)
+    
+    search_base = LDAP_SEARCH_BASE
+    # Modified search filter to only return users who are members of the specified student group
+    search_filter = f'(&(objectClass=user)(sAMAccountName={username})(memberOf={LDAP_STUDENT_GROUP}))'
+    
+    try:
+        # Search for the user with employeeID attribute
+        conn.search(search_base, search_filter, attributes=['employeeID'])
+        if conn.entries:
+            student_number = conn.entries[0].employeeID.value
+            if student_number:
+                return student_number
+            else:
+                logger.info(f"User {username} not found in Active Directory with employeeID attribute. Not updating RollCall.")
+                return None
+        else:
+            logger.info(f"User {username} not found in Active Directory with employeeID attribute or is not a member of AllStudents group. Not updating RollCall.")
+            return None
+    except Exception as e:
+        logger.error(f"Error getting student number for {username} from Active Directory: {e}")
+        return None
+    finally:
+        conn.unbind()
+
+def update_rollcall_card(student_number, card_code):
+    """Update the card code in RollCall system."""
+    if not ROLLCALL_API_URL or not ROLLCALL_TOKEN:
+        return False, "RollCall configuration is missing. Please check environment variables."
+    
+    # Create XML payload
+    xml_payload = f'''<xml>
+    <Token>{ROLLCALL_TOKEN}</Token>
+    <StudentNumber>{student_number}</StudentNumber>
+    <CardCode>{card_code}</CardCode>
+</xml>'''
+    
+    headers = {
+        'Content-Type': 'application/xml'
+    }
+    
+    try:
+        response = requests.post(
+            ROLLCALL_API_URL,
+            data=xml_payload,
+            headers=headers,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            return True, "Card updated successfully in RollCall"
+        elif response.status_code == 400:
+            return False, "RollCall API: Bad request - malformed or missing required fields"
+        elif response.status_code == 401:
+            return False, "RollCall API: Unauthorized - invalid or expired token"
+        elif response.status_code == 500:
+            return False, "RollCall API: Internal server error"
+        else:
+            return False, f"RollCall API: Unexpected error (HTTP {response.status_code})"
+            
+    except requests.exceptions.Timeout:
+        return False, "RollCall API: Request timed out"
+    except requests.exceptions.ConnectionError:
+        return False, "RollCall API: Connection error - unable to reach the server"
+    except requests.exceptions.RequestException as e:
+        return False, f"RollCall API: Request failed - {str(e)}"
+    except Exception as e:
+        return False, f"RollCall API: Unexpected error - {str(e)}"
+
 def set_pager_attribute(username, id_number):
     server = Server(LDAP_SERVER, get_info=ALL)
     conn = Connection(server, LDAP_USER, LDAP_PASSWORD, auto_bind=True)
@@ -188,7 +267,21 @@ def set_pager_attribute(username, id_number):
             # Modify the pager attribute
             conn.modify(user_dn, {'pager': [(MODIFY_REPLACE, [id_number])]})
             if conn.result['description'] == 'success':
-                return set_papercut_primary_card(username, id_number), ''
+                # Update PaperCut
+                papercut_success = set_papercut_primary_card(username, id_number)
+                if not papercut_success:
+                    return False, "LDAP updated but PaperCut update failed"
+                
+                # Get employee number and update RollCall
+                student_number = get_student_number(username)
+                if student_number:
+                    rollcall_success, rollcall_message = update_rollcall_card(student_number, str(id_number))
+                    if not rollcall_success:
+                        return False, f"LDAP and PaperCut updated but RollCall failed: {rollcall_message}"
+                else:
+                    return True, "LDAP and PaperCut updated but could not retrieve employeeID for RollCall"
+                
+                return True, ''
             else:
                 print(f"LDAP Error: {conn.result['description']}")
                 return False, conn.result['description']
