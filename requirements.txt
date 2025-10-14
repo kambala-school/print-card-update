@@ -3,4 +3,4 @@ ldap3==2.9.1
 python-dotenv==1.0.0
 authlib==1.6.4
 flask-login==0.6.3 
-requests==2.32.0
+requests==2.32.4
