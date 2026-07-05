@@ -1,35 +1,18 @@
 # syntax=docker/dockerfile:1
-FROM python:3.13-slim-bullseye
 
-# Create a non-root user
-RUN useradd -m -u 1000 appuser
-
-# Install system dependencies including build tools and OpenSSL
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    gcc \
-    python3-dev \
-    libffi-dev \
-    libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set working directory
-WORKDIR /app
-
-# Copy requirements first to leverage Docker cache
+# Runtime DHI images have no shell/package manager, so install deps in a
+# public builder and copy site-packages into the hardened runtime image.
+FROM dhi.io/python:3-dev AS builder
 COPY requirements.txt .
+RUN pip install --no-cache-dir --target=/packages -r requirements.txt
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+FROM dhi.io/python:3
 
-# Copy application code
+ENV PYTHONPATH=/packages \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+COPY --from=builder /packages /packages
 COPY app .
 
-# Set ownership to non-root user
-RUN chown -R appuser:appuser /app
-
-# Switch to non-root user
-USER appuser
-
-# Run the application
-CMD ["python", "-u", "app.py"]
+CMD ["python", "-u", "./app.py"]

@@ -1,6 +1,5 @@
-from flask import Flask, request, render_template, redirect, url_for, session, jsonify
+from flask import Flask, request, render_template, redirect, url_for, session
 from authlib.integrations.flask_client import OAuth
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from ldap3 import Server, Connection, ALL, MODIFY_REPLACE
 import xmlrpc.client
 import ssl
@@ -10,7 +9,6 @@ from dotenv import load_dotenv
 import base64
 from functools import wraps
 import requests
-import xml.etree.ElementTree as ET
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -37,6 +35,9 @@ OAUTH_CLIENT_ID = os.getenv("OAUTH_CLIENT_ID")
 OAUTH_CLIENT_SECRET = os.getenv("OAUTH_CLIENT_SECRET")
 OAUTH_ISSUER = os.getenv("OAUTH_ISSUER")
 OAUTH_METADATA_URL = os.getenv("OAUTH_METADATA_URL")
+OAUTH_ENABLED = os.getenv("OAUTH_ENABLED", "true").lower() in ("true", "1", "yes")
+DEV_USER_EMAIL = os.getenv("DEV_USER_EMAIL", "dev@localhost")
+DEV_USER_NAME = os.getenv("DEV_USER_NAME", "Local Dev User")
 
 # RollCall configuration
 ROLLCALL_API_URL = os.getenv("ROLLCALL_API_URL")
@@ -48,19 +49,34 @@ proxy = xmlrpc.client.ServerProxy(PAPERCUT_HOST, context=context)
 
 # Initialize OAuth
 oauth = OAuth(app)
-oauth.register(
-    name='kambala',
-    server_metadata_url=OAUTH_METADATA_URL,
-    client_id=OAUTH_CLIENT_ID,
-    client_secret=OAUTH_CLIENT_SECRET,
-    client_kwargs={
-        'scope': 'openid email profile'
-    }
-)
+if OAUTH_ENABLED:
+    if not all([OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_METADATA_URL]):
+        raise RuntimeError(
+            "OAuth is enabled but OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, "
+            "or OAUTH_METADATA_URL is not configured"
+        )
+    oauth.register(
+        name='kambala',
+        server_metadata_url=OAUTH_METADATA_URL,
+        client_id=OAUTH_CLIENT_ID,
+        client_secret=OAUTH_CLIENT_SECRET,
+        client_kwargs={
+            'scope': 'openid email profile'
+        }
+    )
+else:
+    logger.warning("OAUTH_ENABLED=false — authentication is DISABLED (local dev only)")
 
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        if not OAUTH_ENABLED:
+            if 'user' not in session:
+                session['user'] = {
+                    'email': DEV_USER_EMAIL,
+                    'name': DEV_USER_NAME,
+                }
+            return f(*args, **kwargs)
         if 'user' not in session:
             return redirect(url_for('login'))
         return f(*args, **kwargs)
@@ -68,6 +84,9 @@ def login_required(f):
 
 @app.route('/login')
 def login():
+    if not OAUTH_ENABLED:
+        return redirect(url_for('index'))
+
     # Generate a random nonce
     session['nonce'] = base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8').rstrip('=')
 
@@ -82,6 +101,9 @@ def login():
 
 @app.route('/auth/callback')
 def auth_callback():
+    if not OAUTH_ENABLED:
+        return redirect(url_for('index'))
+
     try:
         # Get the token 
         token = oauth.kambala.authorize_access_token()

@@ -29,13 +29,31 @@ ROLLCALL_API_URL = 'https://schoolcode.rollcall.com.au/api/update_card'
 ROLLCALL_TOKEN = 'your-rollcall-token-here'
 LDAP_STUDENT_GROUP = 'CN=AllStudents,OU=Groups,DC=school,DC=nsw,DC=edu,DC=au'
 ```
-OpenID IdP details
+OpenID IdP details (required in production; OAuth is enabled by default)
 ```
+OAUTH_ENABLED=true
 OAUTH_CLIENT_ID=your_client_id_here
 OAUTH_CLIENT_SECRET=your_client_secret_here
 OAUTH_ISSUER=https://issuer/
 OAUTH_METADATA_URL=https://metadata/
 ```
+
+## Local development
+
+To run locally without OAuth, add the following to your `.env` file (never set this in production):
+
+```
+OAUTH_ENABLED=false
+```
+
+Optional dev session identity when OAuth is disabled:
+
+```
+DEV_USER_EMAIL=you@school.edu.au
+DEV_USER_NAME=Your Name
+```
+
+When `OAUTH_ENABLED` is unset or `true`, the app requires OAuth login. The app will fail to start if OAuth is enabled but credentials are missing.
 
 ## Features
 - Updates user's card ID number in Active Directory (pager attribute)
